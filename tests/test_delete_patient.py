@@ -80,4 +80,4 @@ def test_get_patient_by_id(test_db):
         get_patient_by_id(test_db, 9999)
 
     assert excinfo.value.status_code == 404
-    assert excinfo.value.detail == "Paciente com ID 9999 não encontrado."
+    assert excinfo.value.detail == "Patient with ID 9999 not found."

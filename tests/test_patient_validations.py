@@ -26,14 +26,14 @@ def populate_test_data(db):
             name="Jon Snow",
             birth_date=date(1990, 1, 1),
             health_conditions="Night Watch Trauma",
-            gender="Masculino",
+            gender="Masculine",
             address="Castle Black",
         ),
         Patient(
             name="Arya Stark",
             birth_date=date(1999, 6, 12),
             health_conditions="Blindness (temporary)",
-            gender="Feminino",
+            gender="Feminine",
             address="Braavos",
         ),
     ]
@@ -46,7 +46,7 @@ def test_validate_patient_valid(test_db):
         name="Daenerys Targaryen",
         birth_date="1990-06-25",
         health_conditions="Fire Immunity",
-        gender="Feminino",
+        gender="Feminine",
         address="Dragonstone",
     )
 
@@ -58,7 +58,7 @@ def test_validate_patient_future_birth_date(test_db):
         name="Robb Stark",
         birth_date="2090-06-15",
         health_conditions="King in the North",
-        gender="Masculino",
+        gender="Masculine",
         address="Winterfell",
     )
 
@@ -66,7 +66,7 @@ def test_validate_patient_future_birth_date(test_db):
         validate_patient(test_db, patient_data)
 
     assert excinfo.value.status_code == 400
-    assert excinfo.value.detail == "A data de nascimento não pode ser uma data futura."
+    assert excinfo.value.detail == "The date of birth cannot be a future date."
 
 
 def test_validate_patient_single_word_name(test_db):
@@ -74,7 +74,7 @@ def test_validate_patient_single_word_name(test_db):
         name="Jon",
         birth_date="1990-01-01",
         health_conditions="Winter is Coming",
-        gender="Masculino",
+        gender="Masculine",
         address="Castle Black",
     )
 
@@ -82,7 +82,7 @@ def test_validate_patient_single_word_name(test_db):
         validate_patient(test_db, patient_data)
 
     assert excinfo.value.status_code == 400
-    assert excinfo.value.detail == "O nome deve conter pelo menos duas palavras."
+    assert excinfo.value.detail == "The name must contain at least two words."
 
 
 def test_validate_patient_invalid_gender(test_db):
@@ -90,7 +90,7 @@ def test_validate_patient_invalid_gender(test_db):
         name="Samwell Tarly",
         birth_date="1990-12-23",
         health_conditions="Heavyweight",
-        gender="Other",
+        gender="outro",
         address="Horn Hill",
     )
 
@@ -98,7 +98,7 @@ def test_validate_patient_invalid_gender(test_db):
         validate_patient(test_db, patient_data)
 
     assert excinfo.value.status_code == 400
-    assert excinfo.value.detail == "O gênero deve ser um dos seguintes: Masculino, Feminino."
+    assert excinfo.value.detail == "The gender must be one of the following: Masculine, Feminine."
 
 
 def test_validate_patient_existing_patient(test_db):
@@ -108,7 +108,7 @@ def test_validate_patient_existing_patient(test_db):
         name="Jon Snow",
         birth_date="1990-01-01",
         health_conditions="Night Watch Trauma",
-        gender="Masculino",
+        gender="Masculine",
         address="Castle Black",
     )
 
@@ -116,4 +116,4 @@ def test_validate_patient_existing_patient(test_db):
         validate_patient(test_db, patient_data)
 
     assert excinfo.value.status_code == 400
-    assert excinfo.value.detail == "Já existe um paciente com esse nome e data de nascimento."
+    assert excinfo.value.detail == "There is already a patient with that name and date of birth."

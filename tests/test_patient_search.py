@@ -77,9 +77,6 @@ def test_get_patients(test_db):
 
 
 def test_get_patient_by_id(test_db):
-    """
-    Test retrieving a patient by ID.
-    """
     populate_test_data(test_db)
 
     # Test valid patient ID
@@ -91,4 +88,4 @@ def test_get_patient_by_id(test_db):
         get_patient_by_id(test_db, 9999)
 
     assert excinfo.value.status_code == 404
-    assert excinfo.value.detail == "Paciente com ID 9999 não encontrado."
+    assert excinfo.value.detail == "Patient with ID 9999 not found."

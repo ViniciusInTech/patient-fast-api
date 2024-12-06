@@ -10,7 +10,7 @@ def update_patient(db: Session, patient_id: int, updated_data: PatientCreate):
     if not db_patient:
         raise HTTPException(
             status_code=404,
-            detail=f"Paciente não encontrado com id {patient_id}. "
+            detail=f"Patient not found with ID {patient_id}. "
         )
 
     for key, value in updated_data.dict().items():

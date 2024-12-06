@@ -24,7 +24,7 @@ def test_create_patient_valid(test_db):
         name="John Snow",
         birth_date="1990-01-01",
         health_conditions="Cancer",
-        gender="Masculino",
+        gender="Masculine",
         address="Reino do Norte",
     )
 
@@ -34,7 +34,7 @@ def test_create_patient_valid(test_db):
     assert patient.name == "John Snow"
     assert patient.birth_date == date(1990, 1, 1)
     assert patient.health_conditions == "Cancer"
-    assert patient.gender == "Masculino"
+    assert patient.gender == "Masculine"
     assert patient.address == "Reino do Norte"
 
 
@@ -43,11 +43,11 @@ def test_create_patient_invalid(test_db):
         name="Bruno mars",
         birth_date="9090-01-01",
         health_conditions="diabetes",
-        gender="Feminino",
+        gender="Masculine",
         address="casa branca",
     )
 
     with pytest.raises(Exception) as excinfo:
         create_patient(test_db, invalid_patient)
 
-    assert "A data de nascimento não pode ser uma data futura." in str(excinfo.value)
+    assert "The date of birth cannot be a future date." in str(excinfo.value)

@@ -9,20 +9,20 @@ def validate_patient(db: Session, patient: PatientCreate):
     if patient.birth_date > date.today():
         raise HTTPException(
             status_code=400,
-            detail="A data de nascimento não pode ser uma data futura."
+            detail="The date of birth cannot be a future date."
         )
 
     if len(patient.name.split()) < 2:
         raise HTTPException(
             status_code=400,
-            detail="O nome deve conter pelo menos duas palavras."
+            detail="The name must contain at least two words."
         )
 
-    valid_genders = ["Masculino", "Feminino"]
+    valid_genders = ["Masculine", "Feminine"]
     if patient.gender.capitalize() not in valid_genders:
         raise HTTPException(
             status_code=400,
-            detail=f"O gênero deve ser um dos seguintes: {', '.join(valid_genders)}."
+            detail=f"The gender must be one of the following: {', '.join(valid_genders)}."
         )
 
     existing_patient = db.query(Patient).filter(
@@ -33,5 +33,5 @@ def validate_patient(db: Session, patient: PatientCreate):
     if existing_patient:
         raise HTTPException(
             status_code=400,
-            detail="Já existe um paciente com esse nome e data de nascimento."
+            detail="There is already a patient with that name and date of birth."
         )

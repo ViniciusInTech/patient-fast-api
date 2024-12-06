@@ -30,7 +30,7 @@ def get_patient_by_id(db: Session, patient_id: int):
     if not patient:
         raise HTTPException(
             status_code=404,
-            detail=f"Paciente com ID {patient_id} não encontrado."
+            detail=f"Patient with ID {patient_id} not found."
         )
 
     return patient

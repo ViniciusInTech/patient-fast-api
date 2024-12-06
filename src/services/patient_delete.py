@@ -9,9 +9,9 @@ def delete_patient(db: Session, patient_id: int):
     if not db_patient:
         raise HTTPException(
             status_code=404,
-            detail="Paciente não encontrado."
+            detail="Patient not found."
         )
 
     db.delete(db_patient)
     db.commit()
-    return {"detail": "Paciente excluído com sucesso."}
+    return {"detail": "Patient deleted successfully."}

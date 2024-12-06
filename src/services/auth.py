@@ -36,5 +36,5 @@ def decode_access_token(token: str):
 def validate_user(token: str):
     payload = decode_access_token(token)
     if not payload or "sub" not in payload:
-        raise HTTPException(status_code=401, detail="Token inválido ou expirado.")
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
     return payload["sub"]

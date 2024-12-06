@@ -52,10 +52,10 @@ def test_validate_user():
     invalid_token = valid_token + "invalid"
     with pytest.raises(Exception) as excinfo:
         validate_user(invalid_token)
-    assert "Token inválido ou expirado." in str(excinfo.value)
+    assert "Invalid or expired token." in str(excinfo.value)
 
     expired_data = {"sub": "expireduser", "exp": datetime.utcnow() - timedelta(minutes=1)}
     expired_token = jwt.encode(expired_data, SECRET_KEY, algorithm=ALGORITHM)
     with pytest.raises(Exception) as excinfo:
         validate_user(expired_token)
-    assert "Token inválido ou expirado." in str(excinfo.value)
+    assert "Invalid or expired token." in str(excinfo.value)

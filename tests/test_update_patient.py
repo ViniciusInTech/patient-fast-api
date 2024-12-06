@@ -61,4 +61,4 @@ def test_update_nonexistent_patient(test_db):
         update_patient(test_db, nonexistent_id, updated_data)
 
     assert excinfo.value.status_code == 404
-    assert excinfo.value.detail == f"Paciente não encontrado com id {nonexistent_id}. "
+    assert excinfo.value.detail == f"Patient not found with ID {nonexistent_id}. "

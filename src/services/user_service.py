@@ -16,5 +16,5 @@ def create_user(db: Session, username: str, password: str):
 def authenticate_user(db: Session, username: str, password: str):
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Credenciais inválidas")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     return create_access_token({"sub": user.username})

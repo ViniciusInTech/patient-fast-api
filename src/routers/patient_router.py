@@ -16,7 +16,6 @@ router = APIRouter()
 
 
 def get_db():
-    """Dependency to provide a database session."""
     db = SessionLocal()
     try:
         yield db
@@ -52,7 +51,7 @@ def get_db():
 def add_patient(patient: PatientCreate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     validate_user(token)
     patient_new = create_patient(db, patient)
-    return patient_new  # Return the full Patient object
+    return patient_new
 
 
 @router.put(
@@ -90,7 +89,7 @@ def edit_patient(patient_id: int, updated_data: PatientCreate, db: Session = Dep
                  token: str = Depends(oauth2_scheme)):
     validate_user(token)
     patient_updated = update_patient(db, patient_id, updated_data)
-    return patient_updated  # Return the full Patient object
+    return patient_updated
 
 
 @router.delete(

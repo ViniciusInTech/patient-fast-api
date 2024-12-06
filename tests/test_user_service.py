@@ -51,7 +51,7 @@ def test_authenticate_user_invalid_password(test_db):
         authenticate_user(test_db, username, "WrongPassword123")
 
     assert excinfo.value.status_code == 401
-    assert excinfo.value.detail == "Credenciais inválidas"
+    assert excinfo.value.detail == "Invalid credentials"
 
 
 def test_authenticate_user_nonexistent_user(test_db):
@@ -62,4 +62,4 @@ def test_authenticate_user_nonexistent_user(test_db):
         authenticate_user(test_db, username, password)
 
     assert excinfo.value.status_code == 401
-    assert excinfo.value.detail == "Credenciais inválidas"
+    assert excinfo.value.detail == "Invalid credentials"
