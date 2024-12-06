@@ -7,6 +7,4 @@ class UserLogin(BaseModel):
 
 
 class UserCreate(UserLogin):
-    username: str
-    password: str
     pass
