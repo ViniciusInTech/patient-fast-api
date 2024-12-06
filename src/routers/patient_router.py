@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from typing import Optional
 from src.dependencies import oauth2_scheme
 from src.services.patient_add import create_patient
 from src.services.patient_search import get_patients
@@ -126,13 +127,13 @@ def remove_patient(patient_id: int, db: Session = Depends(get_db), token: str = 
 @router.get(
     "/patients/",
     response_model=list[Patient],
-    summary="List all patients",
+    summary="List patients with optional filters",
     description=(
-        "This endpoint retrieves a list of registered patients in the system. "
-        "You can use the following query parameters for pagination:\n\n"
-        "- **skip**: Number of patients to skip (default: 0).\n"
-        "- **limit**: Maximum number of patients to return (default: 10).\n\n"
-        "A valid JWT token must be provided in the Authorization header."
+        "Retrieve a list of patients with optional filters:\n\n"
+        "- **name**: Filter by patient name (case-insensitive).\n"
+        "- **health_conditions**: Filter by health conditions (case-insensitive).\n"
+        "- **patient_id**: Filter by patient ID.\n\n"
+        "Supports pagination using **skip** and **limit** parameters."
     ),
     responses={
         200: {
@@ -145,9 +146,24 @@ def remove_patient(patient_id: int, db: Session = Depends(get_db), token: str = 
         },
     },
 )
-def list_patients(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def list_patients(
+    skip: int = 0,
+    limit: int = 10,
+    name: Optional[str] = None,
+    health_conditions: Optional[str] = None,
+    patient_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+):
     validate_user(token)
-    return get_patients(db, skip, limit)
+    return get_patients(
+        db=db,
+        skip=skip,
+        limit=limit,
+        name=name,
+        health_conditions=health_conditions,
+        patient_id=patient_id,
+    )
 
 
 @router.get(
