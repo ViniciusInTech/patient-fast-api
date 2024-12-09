@@ -26,25 +26,18 @@ git clone https://github.com/ViniciusInTech/patient-fast-api.git
 ### Docker Setup
 Build the Docker image:
 ```bash
-docker-compose build
+docker build -t fastapi-app .
 ```
 
 Run the container:
 ```bash
-docker-compose up  
+docker run -d -p 8000:8000 fastapi-app
 ```
 
 ## Authentication
 Default credentials:
-* **email**: admin@admin.com
-* **password**: admin123
+* **Username**: admin
+* **Password**: admin123
 
 ## Documentation
-Access API documentation at: http://localhost:8001/redoc
-
-## Auth-service 
-http://localhost:8000/api/login/
-http://localhost:8000/api/register/
-
-## patient-service
-http://localhost:8001/api/patients/
+Access API documentation at: http://localhost:8000/redoc
