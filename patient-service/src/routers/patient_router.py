@@ -193,4 +193,10 @@ def list_patients(
 def get_patient(patient_id: int, token: str = Depends(oauth2_scheme),
                 patient_service: PatientService = Depends(get_patient_service)):
     validate_user(token)
-    return patient_service.get_patient_by_id(patient_id)
+    patient = patient_service.get_patient_by_id(patient_id)
+    if patient is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Patient with id '{patient_id}' not found."
+        )
+    return patient
