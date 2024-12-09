@@ -1,36 +1,40 @@
 from fastapi import HTTPException
 from typing import Optional
-from sqlalchemy.orm import Session
-from src.models.patient import Patient
+from src.config.database import SessionLocal
+from src.schemas.patient import Patient
 
 
 def get_patients(
-        db: Session,
         skip: int = 0,
         limit: int = 10,
         name: Optional[str] = None,
         health_conditions: Optional[str] = None,
-        patient_id: Optional[int] = None,
 ):
-    query = db.query(Patient)
+    db = SessionLocal()
+    try:
+        query = db.query(Patient)
 
-    if patient_id:
-        query = query.filter(Patient.id == patient_id)
-    if name:
-        query = query.filter(Patient.name.ilike(f"%{name}%"))
-    if health_conditions:
-        query = query.filter(Patient.health_conditions.ilike(f"%{health_conditions}%"))
+        if name:
+            query = query.filter(Patient.name.ilike(f"%{name}%"))
+        if health_conditions:
+            query = query.filter(Patient.health_conditions.ilike(f"%{health_conditions}%"))
 
-    return query.offset(skip).limit(limit).all()
+        return query.offset(skip).limit(limit).all()
+    finally:
+        db.close()
 
 
-def get_patient_by_id(db: Session, patient_id: int):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+def get_patient_by_id(patient_id: int):
+    db = SessionLocal()
+    try:
+        patient = db.query(Patient).filter(Patient.id == patient_id).first()
 
-    if not patient:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Patient with ID {patient_id} not found."
-        )
+        if not patient:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Patient with ID {patient_id} not found."
+            )
 
-    return patient
+        return patient
+    finally:
+        db.close()

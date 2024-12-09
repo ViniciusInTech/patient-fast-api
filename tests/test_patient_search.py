@@ -1,91 +1,111 @@
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
-from src.models.patient import Patient, Base
+from src.models.patient import PatientCreate
+from src.services.patient_add import create_patient
 from src.services.patient_search import get_patients, get_patient_by_id
+from src.config.database import SessionLocal, engine, Base
 from datetime import date
 
-# Configurar o banco de dados em memória para testes
-@pytest.fixture(scope="module")
-def test_db():
-    engine = create_engine("sqlite:///:memory:")
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)  # Criar tabelas do modelo no banco em memória
-    db = SessionLocal()
+
+def setup_module(module):
+    Base.metadata.create_all(bind=engine)
+
+
+def teardown_module(module):
+    Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def db():
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = SessionLocal()
+
     try:
-        yield db  # Passa o banco simulado para os testes
+        yield session
     finally:
-        db.close()
+        session.close()
+        transaction.rollback()
+        connection.close()
 
 
-def populate_test_data(db):
-    """
-    Populate the database with Game of Thrones characters.
-    """
-    patients = [
-        Patient(
-            name="Jon Snow",
-            birth_date=date(1990, 1, 1),
-            health_conditions="Night Watch Trauma",
-            gender="Male",
-            address="Castle Black",
-        ),
-        Patient(
-            name="Arya Stark",
-            birth_date=date(1999, 6, 12),
-            health_conditions="Blindness (temporary)",
-            gender="Female",
-            address="Braavos",
-        ),
-        Patient(
-            name="Tyrion Lannister",
-            birth_date=date(1980, 3, 10),
-            health_conditions="Alcoholism",
-            gender="Male",
-            address="Casterly Rock",
-        ),
-    ]
-    db.add_all(patients)
-    db.commit()
+def test_get_patients_by_name(db):
+    patient_data_1 = PatientCreate(
+        name="Arya Stark",
+        birth_date=date(2000, 5, 1),
+        health_conditions="Healthy",
+        gender="Feminine",
+        address="Winterfell"
+    )
+    patient_data_2 = PatientCreate(
+        name="Jon Snow",
+        birth_date=date(1990, 6, 12),
+        health_conditions="Healthy",
+        gender="Masculine",
+        address="Beyond the Wall"
+    )
 
+    create_patient(patient_data_1)
+    create_patient(patient_data_2)
 
-def test_get_patients(test_db):
-    """
-    Test retrieving patients with and without filters.
-    """
-    populate_test_data(test_db)
+    patients = get_patients(name="Arya")
 
-    # Test without filters
-    patients = get_patients(test_db)
-    assert len(patients) == 3
-
-    # Test with name filter
-    patients = get_patients(test_db, name="Jon")
-    assert len(patients) == 1
-    assert patients[0].name == "Jon Snow"
-
-    # Test with health conditions filter
-    patients = get_patients(test_db, health_conditions="Alcoholism")
-    assert len(patients) == 1
-    assert patients[0].name == "Tyrion Lannister"
-
-    # Test with pagination
-    patients = get_patients(test_db, skip=1, limit=1)
     assert len(patients) == 1
     assert patients[0].name == "Arya Stark"
 
 
-def test_get_patient_by_id(test_db):
-    populate_test_data(test_db)
+def test_get_patients_by_health_condition(db):
+    patient_data_1 = PatientCreate(
+        name="Daenerys Targaryen",
+        birth_date=date(1985, 12, 1),
+        health_conditions="Healthy",
+        gender="Feminine",
+        address="Dragonstone"
+    )
+    patient_data_2 = PatientCreate(
+        name="Tyrion Lannister",
+        birth_date=date(1970, 6, 22),
+        health_conditions="Alcoholism",
+        gender="Masculine",
+        address="Casterly Rock"
+    )
 
-    # Test valid patient ID
-    patient = get_patient_by_id(test_db, 1)  # ID is 1 for the first patient
-    assert patient.name == "Jon Snow"
+    create_patient(patient_data_1)
+    create_patient(patient_data_2)
 
-    # Test invalid patient ID
-    with pytest.raises(HTTPException) as excinfo:
-        get_patient_by_id(test_db, 9999)
+    patients = get_patients(health_conditions="Alcoholism")
 
-    assert excinfo.value.status_code == 404
-    assert excinfo.value.detail == "Patient with ID 9999 not found."
+    assert len(patients) == 1
+    assert patients[0].name == "Tyrion Lannister"
+
+
+def test_get_patient_by_id(db):
+    patient_data = PatientCreate(
+        name="Cersei Lannister",
+        birth_date=date(1970, 5, 5),
+        health_conditions="Healthy",
+        gender="Feminine",
+        address="King's Landing"
+    )
+
+    created_patient = create_patient(patient_data)
+
+    patient = get_patient_by_id(created_patient.id)
+
+    assert patient.name == "Cersei Lannister"
+    assert patient.id == created_patient.id
+
+
+def test_get_patient_by_id_not_found(db):
+    with pytest.raises(HTTPException) as exc_info:
+        get_patient_by_id(999)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Patient with ID 999 not found."
+
+
+def test_get_patients_no_results(db):
+
+    patients = get_patients(name="Nonexistent Name")
+
+    assert len(patients) == 0

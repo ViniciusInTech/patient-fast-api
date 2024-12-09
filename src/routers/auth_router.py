@@ -1,19 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from src.services.auth import hash_password, verify_password, create_access_token
-from src.config.database import SessionLocal
-from src.models.user import User
-from src.schemas.user import UserCreate, UserLogin
+from fastapi import APIRouter
+from src.models.user import UserCreate, UserLogin
+from src.services.user_authenticate import authenticate_user
+from src.services.user_create import create_user
 
 router = APIRouter()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post(
@@ -42,18 +32,8 @@ def get_db():
         },
     },
 )
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.username == user.username).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=409, detail="The username is already in use."
-        )
-
-    hashed_password = hash_password(user.password)
-    new_user = User(username=user.username, hashed_password=hashed_password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+def register_user(user: UserCreate):
+    create_user(user.username, user.password)
     return {"detail": "User successfully registered."}
 
 
@@ -86,9 +66,6 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         },
     },
 )
-def login(user_login: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == user_login.username).first()
-    if not user or not verify_password(user_login.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token({"sub": user.username})
+def login(user_login: UserLogin):
+    token = authenticate_user(user_login.username, user_login.password)
     return {"access_token": token, "token_type": "bearer"}

@@ -1,21 +1,13 @@
-from pydantic import BaseModel
-from datetime import date
+from sqlalchemy import Column, Integer, String, Date
+from src.config.database import Base
 
 
-class PatientBase(BaseModel):
-    name: str
-    birth_date: date
-    health_conditions: str
-    gender: str
-    address: str
+class Patient(Base):
+    __tablename__ = "patients"
 
-
-class PatientCreate(PatientBase):
-    pass
-
-
-class Patient(PatientBase):
-    id: int
-
-    class Config:
-        orm_mode = True
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    birth_date = Column(Date)
+    health_conditions = Column(String)
+    gender = Column(String)
+    address = Column(String)

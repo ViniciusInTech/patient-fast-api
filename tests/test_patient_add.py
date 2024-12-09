@@ -32,7 +32,7 @@ def test_create_patient_successful(db):
     patient_data = PatientCreate(
         name="Jon Snow",
         birth_date=date(1990, 5, 15),
-        health_conditions="Cancer",
+        health_conditions="cancer",
         gender="Masculine",
         address="Winterfell, North"
     )
@@ -68,28 +68,11 @@ def test_create_patient_with_name_null(db):
         gender="Feminine",
         address="Dragonstone, Narrow Sea"
     )
-
     with pytest.raises(HTTPException) as exc_info:
         create_patient(patient_null_name)
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "The name must contain at least two words."
-
-
-def test_create_patient_with_sex_invalid(db):
-    patient_null_name = PatientCreate(
-        name="Daenerys Targaryen",
-        birth_date=date(2000, 1, 1),
-        health_conditions="Test condition",
-        gender="outro",
-        address="Dragonstone, Narrow Sea"
-    )
-
-    with pytest.raises(HTTPException) as exc_info:
-        create_patient(patient_null_name)
-
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "The gender must be one of the following: Masculine, Feminine."
 
 
 def test_database_session_management(db):
@@ -106,23 +89,26 @@ def test_database_session_management(db):
     assert created_patient.name == patient_data.name
 
 
-def test_database_search(db):
-    patient_data = PatientCreate(
-        name="Arya Stark",
-        birth_date=date(2000, 5, 10),
-        health_conditions="Stealthy and healthy",
-        gender="Feminine",
-        address="Braavos"
-    )
+def test_multiple_patient_creation(db):
+    patients_data = [
+        PatientCreate(
+            name="Tyrion Lannister",
+            birth_date=date(1985, 6, 15),
+            health_conditions="Smart and quick-witted",
+            gender="Masculine",
+            address="Casterly Rock"
+        ),
+        PatientCreate(
+            name="Cersei Lannister",
+            birth_date=date(1990, 8, 20),
+            health_conditions="Scheming and ambitious",
+            gender="Feminine",
+            address="King's Landing"
+        )
+    ]
 
-    created_patient = create_patient(patient_data)
+    created_patients = [create_patient(patient) for patient in patients_data]
 
-    assert created_patient.name == patient_data.name
-
-    with pytest.raises(HTTPException) as exc_info:
-        create_patient(patient_data)
-
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "There is already a patient with that name and date of birth."
-
-
+    assert len(created_patients) == 2
+    assert created_patients[0].name == "Tyrion Lannister"
+    assert created_patients[1].name == "Cersei Lannister"

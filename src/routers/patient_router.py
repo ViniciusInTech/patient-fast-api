@@ -1,26 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends
 
 from typing import Optional
-from src.dependencies import oauth2_scheme
+from src.auth_dependencies import oauth2_scheme
 from src.services.patient_add import create_patient
 from src.services.patient_search import get_patients
 from src.services.patient_edit import update_patient
 from src.services.patient_delete import delete_patient
 from src.services.patient_search import get_patient_by_id
-from src.config.database import SessionLocal
-from src.schemas.patient import PatientCreate, Patient
+from src.models.patient import PatientCreate, Patient
 from src.services.auth import validate_user
 
 router = APIRouter()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post(
@@ -48,9 +38,9 @@ def get_db():
         },
     },
 )
-def add_patient(patient: PatientCreate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def add_patient(patient: PatientCreate, token: str = Depends(oauth2_scheme)):
     validate_user(token)
-    patient_new = create_patient(db, patient)
+    patient_new = create_patient(patient)
     return patient_new
 
 
@@ -85,10 +75,9 @@ def add_patient(patient: PatientCreate, db: Session = Depends(get_db), token: st
         },
     },
 )
-def edit_patient(patient_id: int, updated_data: PatientCreate, db: Session = Depends(get_db),
-                 token: str = Depends(oauth2_scheme)):
+def edit_patient(patient_id: int, updated_data: PatientCreate, token: str = Depends(oauth2_scheme)):
     validate_user(token)
-    patient_updated = update_patient(db, patient_id, updated_data)
+    patient_updated = update_patient(patient_id, updated_data)
     return patient_updated
 
 
@@ -117,9 +106,9 @@ def edit_patient(patient_id: int, updated_data: PatientCreate, db: Session = Dep
         },
     },
 )
-def remove_patient(patient_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def remove_patient(patient_id: int, token: str = Depends(oauth2_scheme)):
     validate_user(token)
-    delete_patient(db, patient_id)
+    delete_patient(patient_id)
     return {"message": f"Patient with id '{patient_id}' successfully deleted!"}
 
 
@@ -150,18 +139,14 @@ def list_patients(
     limit: int = 10,
     name: Optional[str] = None,
     health_conditions: Optional[str] = None,
-    patient_id: Optional[int] = None,
-    db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme),
 ):
     validate_user(token)
     return get_patients(
-        db=db,
         skip=skip,
         limit=limit,
         name=name,
         health_conditions=health_conditions,
-        patient_id=patient_id,
     )
 
 
@@ -190,6 +175,6 @@ def list_patients(
         },
     },
 )
-def get_patient(patient_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def get_patient(patient_id: int, token: str = Depends(oauth2_scheme)):
     validate_user(token)
-    return get_patient_by_id(db, patient_id)
+    return get_patient_by_id(patient_id)

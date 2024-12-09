@@ -1,9 +1,22 @@
+import os
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi import HTTPException
 from passlib.context import CryptContext
+from dotenv import load_dotenv
 
-SECRET_KEY = "dandoUmPoucoDeSal"
+
+load_dotenv()
+
+
+def get_env_var(var_name: str) -> str:
+    value = os.getenv(var_name)
+    if value is None:
+        return "default_key"  # aqui só para não dar erro se faltar a env
+    return value
+
+
+SECRET_KEY = get_env_var("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

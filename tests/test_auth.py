@@ -1,61 +1,82 @@
+import os
 import pytest
-from datetime import datetime, timedelta
-
 from jose import jwt
-
+from fastapi import HTTPException
 from src.services.auth import (
     hash_password,
     verify_password,
     create_access_token,
     decode_access_token,
     validate_user,
-    SECRET_KEY,
-    ALGORITHM,
+    get_env_var
 )
 
-
-def test_hash_and_verify_password():
-    plain_password = "minhasenhamuitoforte"
-    hashed_password = hash_password(plain_password)
-
-    assert plain_password != hashed_password
-
-    assert verify_password(plain_password, hashed_password)
-
-    assert not verify_password("minhasenha123", hashed_password)
+SECRET_KEY = "my_test_secret_key"
+os.environ["SECRET_KEY"] = SECRET_KEY
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-def test_create_and_decode_access_token():
+def test_get_env_var():
+    assert get_env_var("SECRET_KEY") == SECRET_KEY
 
-    data = {"sub": "testuser"}
+    with pytest.raises(RuntimeError):
+        get_env_var("NON_EXISTENT_VAR")
+
+
+def test_hash_password():
+    password = "WinterIsComing123"
+    hashed_password = hash_password(password)
+
+    assert hashed_password != password
+    assert verify_password(password, hashed_password)
+
+
+def test_verify_password_invalid():
+    password = "WinterIsComing123"
+    hashed_password = hash_password(password)
+
+    assert not verify_password("WrongPassword", hashed_password)
+
+
+def test_decode_access_token():
+    data = {"sub": "daenerys.targaryen"}
     token = create_access_token(data)
-
-    assert isinstance(token, str) and len(token) > 0
-
     decoded_data = decode_access_token(token)
-    assert decoded_data is not None
-    assert decoded_data["sub"] == "testuser"
 
-    assert "exp" in decoded_data
+    assert decoded_data["sub"] == "daenerys.targaryen"
 
-    invalid_token = token + "salsal"
-    assert decode_access_token(invalid_token) is None
+
+def test_decode_access_token_invalid():
+    invalid_token = "invalid_token_string"
+    decoded_data = decode_access_token(invalid_token)
+
+    assert decoded_data is None
 
 
 def test_validate_user():
-    valid_data = {"sub": "validuser"}
-    valid_token = create_access_token(valid_data)
+    data = {"sub": "tyrion.lannister"}
+    token = create_access_token(data)
+    user = validate_user(token)
 
-    user = validate_user(valid_token)
-    assert user == "validuser"
+    assert user == "tyrion.lannister"
 
-    invalid_token = valid_token + "invalid"
-    with pytest.raises(Exception) as excinfo:
+
+def test_validate_user_invalid_token():
+    invalid_token = "invalid_token_string"
+
+    with pytest.raises(HTTPException) as excinfo:
         validate_user(invalid_token)
-    assert "Invalid or expired token." in str(excinfo.value)
 
-    expired_data = {"sub": "expireduser", "exp": datetime.utcnow() - timedelta(minutes=1)}
-    expired_token = jwt.encode(expired_data, SECRET_KEY, algorithm=ALGORITHM)
-    with pytest.raises(Exception) as excinfo:
-        validate_user(expired_token)
-    assert "Invalid or expired token." in str(excinfo.value)
+    assert excinfo.value.status_code == 401
+    assert excinfo.value.detail == "Invalid or expired token."
+
+
+def test_validate_user_missing_sub():
+    token = jwt.encode({}, SECRET_KEY, algorithm=ALGORITHM)
+
+    with pytest.raises(HTTPException) as excinfo:
+        validate_user(token)
+
+    assert excinfo.value.status_code == 401
+    assert excinfo.value.detail == "Invalid or expired token."
